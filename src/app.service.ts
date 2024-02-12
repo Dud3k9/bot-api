@@ -9,15 +9,15 @@ export class AppService {
     return 'Hello World!';
   }
 
-  test() {
-    setInterval(() => {
-      console.log('test interval');
-    }, 2000);
-  }
-
-  // @Cron('45 * * * * *')
-  // handleCron() {
-  //   console.log('cron-test');
-  //   this.logger.debug('cron-test');
+  // test() {
+  //   setInterval(() => {
+  //     console.log('test interval');
+  //   }, 2000);
   // }
+
+  @Cron('45 * * * * *')
+  handleCron() {
+    console.log('cron-test');
+    this.logger.debug('cron-test');
+  }
 }
