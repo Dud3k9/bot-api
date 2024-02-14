@@ -5,14 +5,16 @@ import { AppService } from "./app.service";
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get("test")
-  getHello(): string {
-    return this.appService.getHello();
-  }
 
   @Get("start-bot")
   startBot(): string {
-    this.appService.startService();
-    return this.appService.getHello();
+    this.appService.startBot();
+    return "Bot started";
+  }
+
+  @Get("stop-bot")
+  stopBot(): string {
+    this.appService.stopBot();
+    return "Bot stopped";
   }
 }
