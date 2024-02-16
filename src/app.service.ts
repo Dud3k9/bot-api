@@ -1,15 +1,19 @@
 import { Injectable, Logger } from "@nestjs/common";
-import * as playwright from "playwright";
+import { log } from "console";
+import * as playwright from 'playwright';
+
+
 @Injectable()
 export class AppService {
   private readonly logger = new Logger(AppService.name);
   page: playwright.Page;
   isBotWorking = false;
-
+ 
   stopBot(){
     this.isBotWorking = false;
     this.page.close();
-  }
+  } 
+  
 
   async startBot(){
 try{
@@ -29,6 +33,7 @@ try{
         const bookAnys = await this.page.getByText(/book any/).all();
         await bookAnys.forEach(async (bookAny)=>
         {
+          this.logger.debug(bookAny)
           await this.page.waitForTimeout(5000);
           await bookAny.click();
         })
@@ -44,7 +49,6 @@ try{
     console.log(err);
   
   }
-
 
   }
 
@@ -69,7 +73,7 @@ try{
     await this.page.waitForTimeout(2000);
     const cookieButton = await this.page.$("[id='confirm-cookie-consent']");
     await cookieButton.click();
-    const startTidaroButton = await this.page.getByText("Start using Tidaro");
+    const startTidaroButton = await this.page.getByText(/Start using Tidaro/);
     await this.page.waitForTimeout(1000);
     await startTidaroButton.click();
     await this.page.waitForTimeout(1000);
