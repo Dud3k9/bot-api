@@ -55,8 +55,8 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 COPY . .
 # Run the build script.
 RUN npm install
-RUN npx puppeteer browsers install chrome
 RUN npm run build
+RUN npx playwright install 
 
 ################################################################################
 # Create a new stage to run the application with minimal runtime dependencies
