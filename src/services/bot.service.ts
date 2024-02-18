@@ -40,9 +40,10 @@ export class BotService {
   async closeBot() {
     this.page.close();
     this.browser.close();
+    this.page = null;
   }
 
-  // execute ones per day at 00:00 
+  // execute ones per day at 00:00
   async tryBookOnes() {
     try {
       // init

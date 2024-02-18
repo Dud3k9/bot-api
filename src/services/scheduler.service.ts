@@ -1,6 +1,7 @@
-import { Injectable, OnModuleInit } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { Cron, SchedulerRegistry } from "@nestjs/schedule";
 import { BotService } from "./bot.service";
+import { log } from "console";
 
 @Injectable()
 export class SchedulerService {
@@ -10,9 +11,11 @@ export class SchedulerService {
   ) {}
 
   async startBotJob() {
-    this.schedulerRegistry.getCronJob("bot");
-    await this.botService.initBot();
-    this.schedulerRegistry.getCronJob("bot").start();
+    if (!this.botService.page) {
+      await this.botService.initBot();
+      this.schedulerRegistry.getCronJob("bot").start();
+      console.log("bot started");
+    }
   }
 
   async stopBotJob() {
@@ -26,6 +29,8 @@ export class SchedulerService {
     disabled: true,
   })
   async botLoop() {
+    console.log("cron started");
+
     await this.botService.tryBookPlaces();
   }
 
@@ -35,6 +40,7 @@ export class SchedulerService {
     disabled: true,
   })
   async botNewPlacesTime() {
+    console.log("one time cron started");
     await this.botService.tryBookPlaces();
   }
 }
