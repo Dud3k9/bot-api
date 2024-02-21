@@ -84,24 +84,24 @@ export class BotService {
   }
 
   private async login(page: playwright.Page) {
-    const emailInput = await page.$("[id='signInName']");
+    const emailInput = await page.waitForSelector("[id='signInName']");
     await emailInput.fill("extern.petrykowski_maciej@mondial-assistance.pl");
-    const submitButton = await page.$("[id='continue']");
+    const submitButton = await page.waitForSelector("[id='continue']");
     await submitButton.click();
     await page.waitForTimeout(2000);
-    const passwordInput = await page.$("[id='password']");
+    const passwordInput = await page.waitForSelector("[id='password']");
     await passwordInput.fill("Syryjski1");
     await page.waitForTimeout(2000);
-    const nextButton = await page.$("[id='next']");
+    const nextButton = await page.waitForSelector("[id='next']");
     await nextButton.click();
     await page.waitForTimeout(2000);
-    const cookieButton = await page.$("[id='confirm-cookie-consent']");
+    const cookieButton = await page.waitForSelector("[id='confirm-cookie-consent']");
     await cookieButton.click();
     const startTidaroButton = await page.getByText(/Start using Tidaro/);
     await page.waitForTimeout(1000);
     await startTidaroButton.click();
     await page.waitForTimeout(1000);
-    const dialogOk = await page.$("[id='dialog-ok']");
+    const dialogOk = await page.waitForSelector("[id='dialog-ok']");
     await dialogOk.click();
     await page.waitForTimeout(1000);
     await page.goto("https://share.parkanizer.com/marketplace");

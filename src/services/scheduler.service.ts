@@ -23,7 +23,7 @@ export class SchedulerService {
     this.botService.closeBot();
   }
 
-  @Cron("0 */5 * * * *", {
+  @Cron("59 * * * * *", {
     // every minute
     name: "bot",
     disabled: true,
@@ -36,7 +36,7 @@ export class SchedulerService {
 
   @Cron("10 0 0 * * *", {
     // 10 seconds past 00:00
-    name: "Bot",
+    name: "bot",
     disabled: true,
   })
   async botNewPlacesTime() {
