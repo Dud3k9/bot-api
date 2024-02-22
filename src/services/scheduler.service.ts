@@ -23,7 +23,7 @@ export class SchedulerService {
     this.botService.closeBot();
   }
 
-  @Cron("59 * * * * *", {
+  @Cron("10 */5 * * * *", {
     // every minute
     name: "bot",
     disabled: true,
@@ -34,13 +34,13 @@ export class SchedulerService {
     await this.botService.tryBookPlaces();
   }
 
-  @Cron("10 0 0 * * *", {
-    // 10 seconds past 00:00
-    name: "bot",
-    disabled: true,
-  })
-  async botNewPlacesTime() {
-    console.log("one time cron started");
-    await this.botService.tryBookPlaces();
-  }
+  // @Cron("10 0 0 * * *", {
+  //   // 10 seconds past 00:00
+  //   name: "bot",
+  //   disabled: true,
+  // })
+  // async botNewPlacesTime() {
+  //   console.log("one time cron started");
+  //   await this.botService.tryBookPlaces();
+  // }
 }
