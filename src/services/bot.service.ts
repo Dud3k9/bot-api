@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { log } from "console";
 import * as moment from "moment";
 import * as playwright from "playwright";
 
@@ -18,7 +19,7 @@ export class BotService {
       }
 
       for (const buttonId of this.createDaysButtonNames()) {
-        let button = await this.page.$(`[id=${buttonId}]`);
+        let button = await this.page.waitForSelector(`[id=${buttonId}]`);
         if (button) {
           await button.click();
           await this.page.waitForTimeout(500);
@@ -62,7 +63,7 @@ export class BotService {
 
       // book places
       for (const buttonId of this.createDaysButtonNames()) {
-        let button = await page.$(`[id=${buttonId}]`);
+        let button = await page.waitForSelector(`[id=${buttonId}]`);
         if (button) {
           await button.click();
           await page.waitForTimeout(500);
@@ -77,6 +78,45 @@ export class BotService {
     }
   }
 
+  async getTodaySpot(): Promise<string | null> {
+    try {
+      // init
+      const browser = await playwright["chromium"].launch({ headless: false });
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      await page.goto("https://share.parkanizer.com/marketplace");
+      await page.waitForLoadState("load");
+      await page.waitForTimeout(2000);
+
+      // login
+      if (!(await this.isMarketplacePage(page))) {
+        await this.login(page);
+        await page.waitForTimeout(2000);
+      }
+
+      const today = await page.waitForSelector(
+        `[id=day-to-take-${moment().format("DD-MM")}]`
+      );
+      const parkInfo = await today.waitForSelector(
+        `.list__item-col.text-right`
+      );
+      const regex = /Car park \/ (.*) is yours/;
+
+      const regexResult = regex.exec(await parkInfo.innerText());
+
+      // close
+      page.close();
+      browser.close();
+
+      if (regexResult?.length >= 1) {
+        return regexResult[1];
+      }
+      return null;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   private async isMarketplacePage(page: playwright.Page): Promise<boolean> {
     await page.waitForTimeout(2000);
     const isLoggedInElement = await page.$("[id='marketplace']");
@@ -84,24 +124,23 @@ export class BotService {
   }
 
   private async login(page: playwright.Page) {
-    const emailInput = await page.$("[id='signInName']");
+    const emailInput = await page.waitForSelector("[id='signInName']");
     await emailInput.fill("extern.petrykowski_maciej@mondial-assistance.pl");
-    const submitButton = await page.$("[id='continue']");
+    const submitButton = await page.waitForSelector("[id='continue']");
     await submitButton.click();
     await page.waitForTimeout(2000);
-    const passwordInput = await page.$("[id='password']");
+    const passwordInput = await page.waitForSelector("[id='password']");
     await passwordInput.fill("Syryjski1");
+    const nextButton = await page?.waitForSelector("[id='next']");
+    await nextButton?.click();
     await page.waitForTimeout(2000);
-    const nextButton = await page.$("[id='next']");
-    await nextButton.click();
-    await page.waitForTimeout(2000);
-    const cookieButton = await page.$("[id='confirm-cookie-consent']");
-    await cookieButton.click();
+    const cookieButton = await page.waitForSelector(
+      "[id='confirm-cookie-consent']"
+    );
+    await cookieButton?.click();
     const startTidaroButton = await page.getByText(/Start using Tidaro/);
-    await page.waitForTimeout(1000);
     await startTidaroButton.click();
-    await page.waitForTimeout(1000);
-    const dialogOk = await page.$("[id='dialog-ok']");
+    const dialogOk = await page.waitForSelector("[id='dialog-ok']");
     await dialogOk.click();
     await page.waitForTimeout(1000);
     await page.goto("https://share.parkanizer.com/marketplace");
