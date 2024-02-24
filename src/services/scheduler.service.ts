@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Cron, SchedulerRegistry } from "@nestjs/schedule";
 import { BotService } from "./bot.service";
-import { log } from "console";
 
 @Injectable()
 export class SchedulerService {
@@ -9,6 +8,13 @@ export class SchedulerService {
     private schedulerRegistry: SchedulerRegistry,
     private botService: BotService
   ) {}
+
+  async status(){
+    return {
+      isWorking: this.schedulerRegistry.getCronJob("bot").running,
+      todayPlace: await this.botService.getTodaySpot()
+    }
+  }
 
   async startBotJob() {
     if (!this.botService.page) {
