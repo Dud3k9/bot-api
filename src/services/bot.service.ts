@@ -7,6 +7,7 @@ import * as playwright from "playwright";
 export class BotService {
   browser: playwright.Browser;
   page: playwright.Page;
+  history: Map<string, string | null> = new Map<string, string>();
 
   async tryBookPlaces() {
     await this.page.goto("https://share.parkanizer.com/marketplace");
@@ -18,11 +19,40 @@ export class BotService {
         await this.page.waitForTimeout(2000);
       }
 
-      for (const buttonId of this.createDaysButtonNames()) {
-        let button = await this.page.waitForSelector(`[id=${buttonId}]`);
+      this.history.clear();
+      // days iterate
+      for (let index = 0; index < 15; index++) {
+        let day = moment()
+          .hour(0)
+          .minute(0)
+          .second(0)
+          .millisecond(0)
+          .add(index, "day");
+        // book places
+        let buttonId = "take-" + day.format("DD-MM");
+        let button = await this.page.$(`[id=${buttonId}]`);
         if (button) {
           await button.click();
           await this.page.waitForTimeout(500);
+        }
+
+        // save history
+        let dayElement = await this.page.$(
+          `[id=day-to-take-${day.format("DD-MM")}]`
+        );
+        if (dayElement) {
+          let parkInfo = await dayElement.waitForSelector(
+            `.list__item-col.text-right`
+          );
+          const regex = /Car park \/ (.*) is yours/;
+
+          const regexResult = regex.exec(await parkInfo.innerText());
+
+          if (regexResult?.length >= 1) {
+            this.history.set(day.toDate().toISOString(), regexResult[1]);
+          } else {
+            this.history.set(day.toDate().toISOString(), null);
+          }
         }
       }
     } catch (err) {
@@ -42,79 +72,6 @@ export class BotService {
     this.page.close();
     this.browser.close();
     this.page = null;
-  }
-
-  // execute ones per day at 00:00
-  async tryBookOnes() {
-    try {
-      // init
-      const browser = await playwright["chromium"].launch({ headless: true });
-      const context = await browser.newContext();
-      const page = await context.newPage();
-      await page.goto("https://share.parkanizer.com/marketplace");
-      await page.waitForLoadState("load");
-      await page.waitForTimeout(2000);
-
-      // login
-      if (!(await this.isMarketplacePage(page))) {
-        await this.login(page);
-        await page.waitForTimeout(2000);
-      }
-
-      // book places
-      for (const buttonId of this.createDaysButtonNames()) {
-        let button = await page.waitForSelector(`[id=${buttonId}]`);
-        if (button) {
-          await button.click();
-          await page.waitForTimeout(500);
-        }
-      }
-
-      // close
-      page.close();
-      browser.close();
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
-  async getTodaySpot(): Promise<string | null> {
-    try {
-      // init
-      const browser = await playwright["chromium"].launch({ headless: false });
-      const context = await browser.newContext();
-      const page = await context.newPage();
-      await page.goto("https://share.parkanizer.com/marketplace");
-      await page.waitForLoadState("load");
-      await page.waitForTimeout(2000);
-
-      // login
-      if (!(await this.isMarketplacePage(page))) {
-        await this.login(page);
-        await page.waitForTimeout(2000);
-      }
-
-      const today = await page.waitForSelector(
-        `[id=day-to-take-${moment().format("DD-MM")}]`
-      );
-      const parkInfo = await today.waitForSelector(
-        `.list__item-col.text-right`
-      );
-      const regex = /Car park \/ (.*) is yours/;
-
-      const regexResult = regex.exec(await parkInfo.innerText());
-
-      // close
-      page.close();
-      browser.close();
-
-      if (regexResult?.length >= 1) {
-        return regexResult[1];
-      }
-      return null;
-    } catch (err) {
-      console.log(err);
-    }
   }
 
   private async isMarketplacePage(page: playwright.Page): Promise<boolean> {
@@ -144,16 +101,5 @@ export class BotService {
     await dialogOk.click();
     await page.waitForTimeout(1000);
     await page.goto("https://share.parkanizer.com/marketplace");
-  }
-
-  private createDaysButtonNames(): string[] {
-    let buttonIds = [];
-
-    for (let index = 0; index < 15; index++) {
-      let buttonId = "take-" + moment().add(index, "day").format("DD-MM");
-      buttonIds.push(buttonId);
-    }
-
-    return buttonIds;
   }
 }
