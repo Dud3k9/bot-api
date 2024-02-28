@@ -20,7 +20,7 @@ export class BotService {
 
       this.history.clear();
       // days iterate
-      for (let index = 0; index < 15; index++) {
+      for (let index = 15; index >= 0; index--) {
         let day = moment()
           .hour(0)
           .minute(0)
@@ -29,8 +29,11 @@ export class BotService {
           .add(index, "day");
         // book places
         let buttonId = "take-" + day.format("DD-MM");
+
         let button = await this.page.$(`[id=${buttonId}]`);
         if (button) {
+          console.log("clicked button: " + buttonId);
+
           await button.click();
           await this.page.waitForTimeout(500);
         }

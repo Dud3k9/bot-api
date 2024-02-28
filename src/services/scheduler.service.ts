@@ -36,9 +36,11 @@ export class SchedulerService {
     disabled: true,
   })
   async botLoop() {
-    console.log("cron started");
-
-    await this.botService.tryBookPlaces();
+    try {
+      console.log("cron started");
+      await this.botService.tryBookPlaces();
+    } catch (err) {
+      console.log(err);
+    }
   }
-
 }
