@@ -21,7 +21,7 @@ export class BotService {
       this.history.clear();
       // days iterate
       for (let index = 15; index >= 0; index--) {
-        let day = moment()
+        let day = moment(new Date())
           .hour(0)
           .minute(0)
           .second(0)
@@ -29,6 +29,8 @@ export class BotService {
           .add(index, "day");
         // book places
         let buttonId = "take-" + day.format("DD-MM");
+        console.log(buttonId);
+        
 
         let button = await this.page.$(`[id=${buttonId}]`);
         if (button) {
@@ -71,8 +73,8 @@ export class BotService {
   }
 
   async closeBot() {
-    this.page.close();
-    this.browser.close();
+    await this.page.close();
+    await this.browser.close();
     this.page = null;
   }
 

@@ -24,10 +24,11 @@ export class SchedulerService {
       console.log("bot started");
     }
   }
-
+  
   async stopBotJob() {
     this.schedulerRegistry.getCronJob("bot").stop();
-    this.botService.closeBot();
+    await this.botService.closeBot();
+    console.log("bot stoped");
   }
 
   @Cron("10 */5 * * * *", {
@@ -41,6 +42,9 @@ export class SchedulerService {
       await this.botService.tryBookPlaces();
     } catch (err) {
       console.log(err);
+      await this.startBotJob();
+      await this.startBotJob();
+      console.log('restarted bot');
     }
   }
 }
