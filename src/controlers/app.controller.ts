@@ -15,14 +15,14 @@ export class AppController {
   }
 
   @Get("start")
-  startBot(): string {
-    this.schedulerService.startBotJob();
-    return "Bot started";
+  async startBot() {
+    await this.schedulerService.startBotJob();
+    return { isWorking: true };
   }
 
   @Get("stop")
-  stopBot(): string {
-    this.schedulerService.stopBotJob();
-    return "Bot stopped";
+  async stopBot() {
+    await this.schedulerService.stopBotJob();
+    return { isWorking: false };
   }
 }

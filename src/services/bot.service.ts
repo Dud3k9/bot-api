@@ -1,12 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import * as moment from "moment";
 import * as playwright from "playwright";
+import { HistoryItem } from "../interfaces/history.interface";
 
 @Injectable()
 export class BotService {
   browser: playwright.Browser;
   page: playwright.Page;
-  history: Map<string, string | null> = new Map<string, string>();
+  history: HistoryItem[] = [];
 
   async tryBookPlaces() {
     await this.page.goto("https://share.parkanizer.com/marketplace");
@@ -18,7 +19,7 @@ export class BotService {
         await this.page.waitForTimeout(2000);
       }
 
-      this.history.clear();
+      this.history = [];
       // days iterate
       for (let index = 15; index >= 0; index--) {
         let day = moment(new Date())
@@ -30,7 +31,6 @@ export class BotService {
         // book places
         let buttonId = "take-" + day.format("DD-MM");
         console.log(buttonId);
-        
 
         let button = await this.page.$(`[id=${buttonId}]`);
         if (button) {
@@ -53,9 +53,15 @@ export class BotService {
           const regexResult = regex.exec(await parkInfo.innerText());
 
           if (regexResult?.length >= 1) {
-            this.history.set(day.toDate().toISOString(), regexResult[1]);
+            this.history.push({
+              day: day.toDate().toISOString(),
+              place: regexResult[1],
+            });
           } else {
-            this.history.set(day.toDate().toISOString(), null);
+            this.history.push({
+              day: day.toDate().toISOString(),
+              place: null,
+            });
           }
         }
       }

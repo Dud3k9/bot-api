@@ -13,7 +13,7 @@ export class SchedulerService {
   async status() {
     return {
       isWorking: this.schedulerRegistry.getCronJob("bot").running,
-      history: Object.fromEntries(this.botService.history),
+      history: this.botService.history,
     };
   }
 
@@ -42,7 +42,7 @@ export class SchedulerService {
       await this.botService.tryBookPlaces();
     } catch (err) {
       console.log(err);
-      await this.startBotJob();
+      await this.stopBotJob();
       await this.startBotJob();
       console.log('restarted bot');
     }
