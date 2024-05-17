@@ -1,12 +1,11 @@
 import { Controller, Get } from "@nestjs/common";
+import { ParkCashApi } from "../services/parkcash-api.service";
 import { SchedulerService } from "../services/scheduler.service";
-import { BotService } from "../services/bot.service";
 
 @Controller("bot")
 export class AppController {
   constructor(
     private readonly schedulerService: SchedulerService,
-    private botService: BotService
   ) {}
 
   @Get("status")
@@ -25,4 +24,9 @@ export class AppController {
     await this.schedulerService.stopBotJob();
     return { isWorking: false };
   }
+
+  // @Get("test")
+  // test() {
+  //   return this.schedulerService.bookPlaces();
+  // }
 }

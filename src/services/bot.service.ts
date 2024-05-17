@@ -1,115 +1,86 @@
 import { Injectable } from "@nestjs/common";
+import { ParkCashApi } from "./parkcash-api.service";
+import { log } from "console";
 import * as moment from "moment";
-import * as playwright from "playwright";
+import {
+  map,
+  switchMap,
+  merge,
+  combineLatest,
+  of,
+  mergeMap,
+  tap,
+  Observable,
+} from "rxjs";
 import { HistoryItem } from "../interfaces/history.interface";
 
 @Injectable()
 export class BotService {
-  browser: playwright.Browser;
-  page: playwright.Page;
-  history: HistoryItem[] = [];
+  constructor(private parkCashApi: ParkCashApi) {}
 
-  async tryBookPlaces() {
-    await this.page.goto("https://share.parkanizer.com/marketplace");
-    await this.page.waitForLoadState("load");
-    await this.page.waitForTimeout(2000);
-    try {
-      if (!(await this.isMarketplacePage(this.page))) {
-        await this.login(this.page);
-        await this.page.waitForTimeout(2000);
-      }
-
-      this.history = [];
-      // days iterate
-      for (let index = 15; index >= 0; index--) {
-        let day = moment(new Date())
-          .hour(0)
-          .minute(0)
-          .second(0)
-          .millisecond(0)
-          .add(index, "day");
-        // book places
-        let buttonId = "take-" + day.format("DD-MM");
-        console.log(buttonId);
-
-        let button = await this.page.$(`[id=${buttonId}]`);
-        if (button) {
-          console.log("clicked button: " + buttonId);
-
-          await button.click();
-          await this.page.waitForTimeout(500);
-        }
-
-        // save history
-        let dayElement = await this.page.$(
-          `[id=day-to-take-${day.format("DD-MM")}]`
-        );
-        if (dayElement) {
-          let parkInfo = await dayElement.waitForSelector(
-            `.list__item-col.text-right`
-          );
-          const regex = /Car park \/ (.*) is yours/;
-
-          const regexResult = regex.exec(await parkInfo.innerText());
-
-          if (regexResult?.length >= 1) {
-            this.history.push({
-              day: day.toDate().toISOString(),
-              place: regexResult[1],
-            });
-          } else {
-            this.history.push({
-              day: day.toDate().toISOString(),
-              place: null,
-            });
-          }
-        }
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
-  async initBot() {
-    this.browser = await playwright["chromium"].launch({ headless: true });
-    const context = await this.browser.newContext();
-    this.page = await context.newPage();
-    await this.page.goto("https://share.parkanizer.com/marketplace");
-    await this.page.waitForLoadState("load");
-  }
-
-  async closeBot() {
-    await this.page.close();
-    await this.browser.close();
-    this.page = null;
-  }
-
-  private async isMarketplacePage(page: playwright.Page): Promise<boolean> {
-    await page.waitForTimeout(2000);
-    const isLoggedInElement = await page.$("[id='marketplace']");
-    return !!isLoggedInElement;
-  }
-
-  private async login(page: playwright.Page) {
-    const emailInput = await page.waitForSelector("[id='signInName']");
-    await emailInput.fill("extern.petrykowski_maciej@mondial-assistance.pl");
-    const submitButton = await page.waitForSelector("[id='continue']");
-    await submitButton.click();
-    await page.waitForTimeout(2000);
-    const passwordInput = await page.waitForSelector("[id='password']");
-    await passwordInput.fill("Syryjski1");
-    const nextButton = await page?.waitForSelector("[id='next']");
-    await nextButton?.click();
-    await page.waitForTimeout(2000);
-    const cookieButton = await page.waitForSelector(
-      "[id='confirm-cookie-consent']"
+  bookPlaces() {
+    return this.parkCashApi.reservedPlace().pipe(
+      map((x) =>
+        x.result.entries
+          .filter(
+            (reservation) =>
+              reservation.status === 3 || reservation.status === 4
+          )
+          .map((reservation) => moment(reservation.startTimestamp))
+      ),
+      map((reservedDays) =>
+        this.getDays().filter(
+          (day) =>
+            !reservedDays.some((reservedDay) => reservedDay.isSame(day, "day"))
+        )
+      ),
+      switchMap((daysToReserve) => {
+        return !!daysToReserve.length
+          ? merge(
+              ...daysToReserve.map((day) =>
+                combineLatest([this.parkCashApi.searchPlaces(day), of(day)])
+              )
+            ).pipe(
+              mergeMap(([places, day]) => {
+                const parkingId: string | undefined =
+                  places.result.userParkings[0].spots.find(
+                    (spot) => spot.isFree
+                  ).id;
+                return parkingId
+                  ? this.parkCashApi
+                      .bookPlace(day, parkingId)
+                      .pipe(tap((x) => log(x)))
+                  : of("no free places at: " + day.toISOString());
+              })
+            )
+          : of("no places to book");
+      })
     );
-    await cookieButton?.click();
-    const startTidaroButton = await page.getByText(/Start using Tidaro/);
-    await startTidaroButton.click();
-    const dialogOk = await page.waitForSelector("[id='dialog-ok']");
-    await dialogOk.click();
-    await page.waitForTimeout(1000);
-    await page.goto("https://share.parkanizer.com/marketplace");
+  }
+
+  getReservations(): Observable<HistoryItem[]> {
+    return this.parkCashApi.reservedPlace().pipe(
+      map((reservationsResponse) =>
+        reservationsResponse.result.entries.map((reservation) => ({
+          day: moment(reservation.startTimestamp).toISOString(),
+          place: reservation.spotNumber,
+          entry: reservation,
+        }))
+      )
+    );
+  }
+
+  private getDays(): moment.Moment[] {
+    let days = [];
+    for (let index = 13; index >= 0; index--) {
+      const day = moment(new Date())
+        .hour(0)
+        .minute(0)
+        .second(0)
+        .millisecond(0)
+        .add(index, "day");
+      if (day.weekday() != 6 && day.weekday() != 0) days.push(day);
+    }
+    return days;
   }
 }

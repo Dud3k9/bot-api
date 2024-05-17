@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Cron, SchedulerRegistry } from "@nestjs/schedule";
+import { first, map } from "rxjs";
 import { BotService } from "./bot.service";
-import { log } from "console";
 
 @Injectable()
 export class SchedulerService {
@@ -11,23 +11,25 @@ export class SchedulerService {
   ) {}
 
   async status() {
-    return {
-      isWorking: this.schedulerRegistry.getCronJob("bot").running,
-      history: this.botService.history,
-    };
+    // return {
+    //   isWorking: this.schedulerRegistry.getCronJob("bot").running,
+    //   history: this.botService.getReservations(),
+    // };
+    return this.botService.getReservations().pipe(
+      map((history) => ({
+        isWorking: this.schedulerRegistry.getCronJob("bot").running,
+          history
+      }))
+    );
   }
 
   async startBotJob() {
-    if (!this.botService.page) {
-      await this.botService.initBot();
-      this.schedulerRegistry.getCronJob("bot").start();
-      console.log("bot started");
-    }
+    this.schedulerRegistry.getCronJob("bot").start();
+    console.log("bot started");
   }
-  
+
   async stopBotJob() {
     this.schedulerRegistry.getCronJob("bot").stop();
-    await this.botService.closeBot();
     console.log("bot stoped");
   }
 
@@ -39,12 +41,10 @@ export class SchedulerService {
   async botLoop() {
     try {
       console.log("cron started");
-      await this.botService.tryBookPlaces();
+      await this.botService.bookPlaces().pipe(first()).subscribe();
     } catch (err) {
       console.log(err);
-      await this.stopBotJob();
-      await this.startBotJob();
-      console.log('restarted bot');
+      console.log("restarted bot");
     }
   }
 }
