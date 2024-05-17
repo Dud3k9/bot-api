@@ -11,10 +11,6 @@ export class SchedulerService {
   ) {}
 
   async status() {
-    // return {
-    //   isWorking: this.schedulerRegistry.getCronJob("bot").running,
-    //   history: this.botService.getReservations(),
-    // };
     return this.botService.getReservations().pipe(
       map((history) => ({
         isWorking: this.schedulerRegistry.getCronJob("bot").running,
