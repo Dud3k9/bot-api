@@ -56,7 +56,7 @@ COPY . .
 # Run the build script.
 RUN npm install
 RUN npm run build
-RUN npx playwright install 
+# RUN npx playwright install 
 
 ################################################################################
 # Create a new stage to run the application with minimal runtime dependencies

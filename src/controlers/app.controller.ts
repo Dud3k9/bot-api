@@ -4,9 +4,7 @@ import { SchedulerService } from "../services/scheduler.service";
 
 @Controller("bot")
 export class AppController {
-  constructor(
-    private readonly schedulerService: SchedulerService,
-  ) {}
+  constructor(private readonly schedulerService: SchedulerService) {}
 
   @Get("status")
   status() {
@@ -25,8 +23,8 @@ export class AppController {
     return { isWorking: false };
   }
 
-  // @Get("test")
-  // test() {
-  //   return this.schedulerService.bookPlaces();
-  // }
+  @Get("test")
+  test() {
+    return this.schedulerService.oneTimeBooking();
+  }
 }

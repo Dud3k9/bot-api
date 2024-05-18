@@ -48,6 +48,7 @@ export class ParkCashApi {
       tap(() => {
         log(moment(day).toISOString());
         log(moment(day).add(1, "day").toISOString());
+        log(place);
       }),
       switchMap((token) =>
         this.httpService.post<HttpResponse<SearchPlacesResponse>>(

@@ -14,7 +14,7 @@ export class SchedulerService {
     return this.botService.getReservations().pipe(
       map((history) => ({
         isWorking: this.schedulerRegistry.getCronJob("bot").running,
-          history
+        history,
       }))
     );
   }
@@ -29,6 +29,10 @@ export class SchedulerService {
     console.log("bot stoped");
   }
 
+  oneTimeBooking() {
+    return this.botService.bookPlaces();
+  }
+
   @Cron("10 */5 * * * *", {
     // every minute
     name: "bot",
@@ -37,7 +41,7 @@ export class SchedulerService {
   async botLoop() {
     try {
       console.log("cron started");
-      await this.botService.bookPlaces().pipe(first()).subscribe();
+      await this.botService.bookPlaces().subscribe();
     } catch (err) {
       console.log(err);
       console.log("restarted bot");

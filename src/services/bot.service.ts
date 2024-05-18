@@ -34,6 +34,7 @@ export class BotService {
             !reservedDays.some((reservedDay) => reservedDay.isSame(day, "day"))
         )
       ),
+      tap((x) => log(x)),
       switchMap((daysToReserve) => {
         return !!daysToReserve.length
           ? merge(
@@ -50,10 +51,12 @@ export class BotService {
                   ? this.parkCashApi
                       .bookPlace(day, parkingId)
                       .pipe(tap((x) => log(x)))
-                  : of("no free places at: " + day.toISOString());
+                  : of("no free places at: " + day.toISOString()).pipe(
+                      tap((x) => log(x))
+                    );
               })
             )
-          : of("no places to book");
+          : of("no places to book").pipe(tap((x) => log(x)));
       })
     );
   }
