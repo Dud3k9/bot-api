@@ -1,18 +1,18 @@
 import { Injectable } from "@nestjs/common";
-import { ParkCashApi } from "./parkcash-api.service";
 import { log } from "console";
 import * as moment from "moment";
 import {
-  map,
-  switchMap,
-  merge,
-  combineLatest,
-  of,
-  mergeMap,
-  tap,
   Observable,
+  combineLatest,
+  map,
+  merge,
+  mergeMap,
+  of,
+  switchMap,
+  tap
 } from "rxjs";
 import { HistoryItem } from "../interfaces/history.interface";
+import { ParkCashApi } from "./parkcash-api.service";
 
 @Injectable()
 export class BotService {
@@ -75,7 +75,7 @@ export class BotService {
 
   private getDays(): moment.Moment[] {
     let days = [];
-    for (let index = 13; index >= 0; index--) {
+    for (let index = 14; index >= 0; index--) {
       const day = moment(new Date())
         .hour(0)
         .minute(0)

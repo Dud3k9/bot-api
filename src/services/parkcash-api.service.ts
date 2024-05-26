@@ -1,7 +1,7 @@
 import { HttpService } from "@nestjs/axios";
 import { Injectable, Logger } from "@nestjs/common";
 import { Moment } from "moment";
-import { Observable, map, of, switchMap, tap } from "rxjs";
+import { EMPTY, Observable, catchError, map, of, switchMap, tap } from "rxjs";
 import { HttpResponse } from "../interfaces/response.interface";
 import { Token } from "../interfaces/token.interface";
 import {
@@ -51,21 +51,32 @@ export class ParkCashApi {
         log(place);
       }),
       switchMap((token) =>
-        this.httpService.post<HttpResponse<SearchPlacesResponse>>(
-          `https://app.parkcash.io/api/ParkingSpots/${place}/reservations`,
-          {
-            start: moment(day).toISOString(),
-            end: moment(day).add(1, "day").toISOString(),
-            vehicleId: userConfig.vehicleId,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
+        this.httpService
+          .post<HttpResponse<SearchPlacesResponse>>(
+            `https://app.parkcash.io/api/ParkingSpots/${place}/reservations`,
+            {
+              start: moment(day).toISOString(),
+              end: moment(day).add(1, "day").toISOString(),
+              vehicleId: userConfig.vehicleId,
             },
-          }
-        )
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
+          .pipe(
+            catchError((error) => {
+              log(error);
+              return EMPTY;
+            })
+          )
       ),
-      map((response) => response.data)
+      map((response) => response.data),
+      catchError((error) => {
+        log(error);
+        return EMPTY;
+      })
     );
   }
 
@@ -98,7 +109,13 @@ export class ParkCashApi {
                   password: userConfig.password,
                 }
               )
-              .pipe(map((response) => response.data.result.jwt));
+              .pipe(
+                map((response) => response.data.result.jwt),
+                tap((newToken) => {
+                  this.token = newToken;
+                  log("took new token");
+                })
+              );
       })
     );
   }

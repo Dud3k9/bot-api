@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Cron, SchedulerRegistry } from "@nestjs/schedule";
-import { first, map } from "rxjs";
+import { EMPTY, catchError, map } from "rxjs";
 import { BotService } from "./bot.service";
 
 @Injectable()
@@ -41,7 +41,15 @@ export class SchedulerService {
   async botLoop() {
     try {
       console.log("cron started");
-      await this.botService.bookPlaces().subscribe();
+      this.botService
+        .bookPlaces()
+        .pipe(
+          catchError((error) => {
+            console.log(error);
+            return EMPTY;
+          })
+        )
+        .subscribe();
     } catch (err) {
       console.log(err);
       console.log("restarted bot");
