@@ -9,7 +9,7 @@ import {
   mergeMap,
   of,
   switchMap,
-  tap
+  tap,
 } from "rxjs";
 import { HistoryItem } from "../interfaces/history.interface";
 import { ParkCashApi } from "./parkcash-api.service";
@@ -64,11 +64,16 @@ export class BotService {
   getReservations(): Observable<HistoryItem[]> {
     return this.parkCashApi.reservedPlace().pipe(
       map((reservationsResponse) =>
-        reservationsResponse.result.entries.map((reservation) => ({
-          day: moment(reservation.startTimestamp).toISOString(),
-          place: reservation.spotNumber,
-          entry: reservation,
-        }))
+        reservationsResponse.result.entries
+          .filter(
+            (reservation) =>
+              reservation.status === 3 || reservation.status === 4
+          )
+          .map((reservation) => ({
+            day: moment(reservation.startTimestamp).toISOString(),
+            place: reservation.spotNumber,
+            entry: reservation,
+          }))
       )
     );
   }
