@@ -1,5 +1,5 @@
 build:
-docker buildx build --platform linux/amd64 -t dud3k9/bot-api:arm64 --push . 
+docker buildx build --platform linux/arm64 -t dud3k9/bot-api:arm64 --push . 
 
 pull:
 docker pull dud3k9/bot-api:arm64
