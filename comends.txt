@@ -5,5 +5,5 @@ pull:
 docker pull dud3k9/bot-api:arm64
 
 start:
-docker run --name bot -p 3000:3000 --env EMAIL=xxx@xxx.xxx --env PASSWORD=hasło123 --env VEHICLEID=xxx-xxx-xxx-xxx dud3k9/bot-api:arm64 
+docker run --name bot-parkCash -p 3000:3000 --env EMAIL=xxx@xxx.xxx --env PASSWORD=hasło123 --env VEHICLEID=xxx-xxx-xxx-xxx dud3k9/bot-api:arm64 
 
