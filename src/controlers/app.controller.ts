@@ -1,11 +1,12 @@
-import { Controller, Get } from "@nestjs/common";
-import { ParkCashApi } from "../services/parkcash-api.service";
+import {
+  Controller,
+  Get,
+  OnApplicationBootstrap
+} from "@nestjs/common";
 import { SchedulerService } from "../services/scheduler.service";
 
 @Controller("bot")
-export class AppController {
-  constructor(private readonly schedulerService: SchedulerService) {}
-
+export class AppController implements OnApplicationBootstrap {
   @Get("status")
   status() {
     return this.schedulerService.status();
@@ -26,5 +27,10 @@ export class AppController {
   @Get("test")
   test() {
     return this.schedulerService.oneTimeBooking();
+  }
+
+  constructor(private readonly schedulerService: SchedulerService) {}
+  onApplicationBootstrap() {
+    this.startBot();
   }
 }

@@ -9,9 +9,12 @@
 
 ARG NODE_VERSION=18.19.0
 
+
 ################################################################################
 # Use node image for base image for all stages.
 FROM node:${NODE_VERSION} as base
+
+
 
 
 RUN apt-get update 
@@ -56,7 +59,6 @@ COPY . .
 # Run the build script.
 RUN npm install
 RUN npm run build
-# RUN npx playwright install 
 
 ################################################################################
 # Create a new stage to run the application with minimal runtime dependencies
@@ -82,5 +84,9 @@ COPY --from=build /usr/src/app/dist ./dist
 # Expose the port that the application listens on.
 EXPOSE 3000
 
+ENV EMAIL=$EMAIL
+ENV PASSWORD=$PASSWORD
+ENV VEHICLEID=$VEHICLEID
+
 # Run the application.
-CMD npm run start:prod
+CMD node dist/main ${EMAIL} ${PASSWORD} ${VEHICLEID}
