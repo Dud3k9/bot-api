@@ -45,8 +45,8 @@ export class BotService {
               mergeMap(([places, day]) => {
                 const parkingId: string | undefined =
                   places.result.userParkings[0].spots.find(
-                    (spot) => spot.isFree
-                  ).id;
+                    (spot) => spot.isFree && spot.isAvailable
+                  )?.id;
                 return parkingId
                   ? this.parkCashApi
                       .bookPlace(day, parkingId)

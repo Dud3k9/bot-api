@@ -33,7 +33,7 @@ export class SchedulerService {
     return this.botService.bookPlaces();
   }
 
-  @Cron("10 */5 * * * *", {
+  @Cron("15 */5 * * * *", {
     // every minute
     name: "bot",
     disabled: true,
